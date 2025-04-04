@@ -1,0 +1,44 @@
+graph TD
+    Q[User Query] --> I[Query Interpreter Agent]
+    
+    subgraph "Memory System"
+        CM[Conversation Memory]
+        KM[KPI Memory]
+        AM[Analysis Memory]
+    end
+    
+    subgraph "Vector Store"
+        KV[KPI Embeddings]
+        HV[Historical Patterns]
+        IV[Insight Vectors]
+    end
+
+    subgraph "PydanticAI Agents"
+        I --> DA[Data Analysis Agent]
+        DA --> IG[Insight Generator Agent]
+        IG --> VG[Visualization Generator Agent]
+    end
+
+    subgraph "Type Safety Layer"
+        KS[KPI Schemas]
+        AS[Analysis Schemas]
+        VS[Visualization Schemas]
+    end
+
+    CM --> I
+    KM --> DA
+    AM --> IG
+
+    KV --> DA
+    HV --> IG
+    IV --> VG
+
+    KS --> DA
+    AS --> IG
+    VS --> VG
+
+    VG --> DB[(Supabase)]
+    DB --> CM
+
+    style PydanticAI fill:#f9f,stroke:#333,stroke-width:2px
+    style Type fill:#ff9,stroke:#333,stroke-width:2px

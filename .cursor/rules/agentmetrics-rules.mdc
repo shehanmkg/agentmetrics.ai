@@ -1,0 +1,18 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+
+# Your rule content
+
+- Always use OpenAI API with Pydantic AI framework for Agents
+- Always write simple and manageble files, don't write code files more than 500 lines
+- Use Local Postgre SQL database
+- Do not run server by yourself 
+- Always use latest versions 
+- Always keep current progress as .md files 
+- If an error keep occuring, Just Stop and explain why it's happening
+- You should always divide longer task in to smaller, manageable ones 
+- Do not edit .env file, existing one already has what you need
+- Do not make the project complex unnecessarily 
