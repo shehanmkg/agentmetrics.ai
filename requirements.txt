@@ -1,14 +1,23 @@
-fastapi==0.110.0
-uvicorn==0.34.0
-pydantic==2.11.2
-pydantic-ai==0.0.52
-sqlalchemy==2.0.28
+fastapi
+uvicorn
+pydantic
+pydanticai # Matches prompt instruction, was pydantic-ai
+python-dotenv
+SQLAlchemy
+psycopg2-binary
+sentence-transformers
+# Existing other requirements from the file:
 sqlalchemy-utils==0.41.1
-psycopg2-binary==2.9.10
 pandas==2.2.1
 numpy==1.26.3
 pytest==7.4.3
-python-dotenv==1.0.0
-httpx==0.28.1 
+httpx==0.28.1
 alembic==1.13.1
-psycopg2==2.9.10
+# fastapi==0.110.0 # covered by 'fastapi'
+# uvicorn==0.34.0 # covered by 'uvicorn'
+# pydantic==2.11.2 # covered by 'pydantic'
+# pydantic-ai==0.0.52 # covered by 'pydanticai'
+# sqlalchemy==2.0.28 # covered by 'SQLAlchemy'
+# psycopg2-binary==2.9.10 # covered by 'psycopg2-binary'
+# python-dotenv==1.0.0 # covered by 'python-dotenv'
+# psycopg2==2.9.10 # removed duplicate

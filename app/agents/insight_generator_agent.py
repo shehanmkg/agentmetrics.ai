@@ -1,79 +1,94 @@
 # In app/agents/insight_generator_agent.py
-from pydanticai import Agent, Tool
+from pydanticai import Agent, Tool # Assuming PydanticAI is still the base
 from pydantic import BaseModel, Field
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any
 
 # Input will be the AnalysisResult from DataAnalysisAgent
-from .data_analysis_agent import AnalysisResult as DataAnalysisResult # Alias to avoid confusion
+# Ensure this import correctly reflects the structure of AnalysisResult after its recent update
+from .data_analysis_agent import AnalysisResult as DataAnalysisResult
 
-class GeneratedInsight(BaseModel):
+class GeneratedInsight(BaseModel): # From previous step, ensure it's consistent
     executive_summary: str = Field(..., description="A high-level summary of the findings.")
     key_findings: List[str] = Field(default_factory=list, description="Bulleted list of key findings.")
     recommendations: List[str] = Field(default_factory=list, description="Actionable recommendations based on the insights.")
-    data_source_table: str = Field(..., description="The original data source table for context.")
+    data_context: str = Field(..., description="The original data context (e.g., table name or query description).") # Renamed from data_source_table
+    record_count_analyzed: int = Field(..., description="Number of records analyzed.")
 
-class InsightGeneratorAgent(Agent):
+
+class InsightGeneratorAgent(Agent): # Assuming PydanticAI structure
     class Config:
-        tools = [
-            Tool(name="generate_insights")
-        ]
+        tools = [Tool(name="generate_insights_real")]
         enable_default_tools = False
 
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
-        self._tools["generate_insights"] = self._mock_generate_insights
+        self._tools["generate_insights_real"] = self._mock_generate_insights_from_real_analysis
 
-    def _mock_generate_insights(self, analysis_result: DataAnalysisResult) -> GeneratedInsight:
+    def _mock_generate_insights_from_real_analysis(self, analysis_result: DataAnalysisResult) -> GeneratedInsight:
         """
-        Mock tool to generate insights from analysis results.
+        Mock tool to generate insights from real analysis results.
+        Summarizes the output of DataAnalysisAgent.
         """
         summary_parts = []
         findings = []
         recommendations = []
 
-        source_table = analysis_result.analyzed_table
+        data_context = analysis_result.analyzed_context
+        record_count = analysis_result.record_count
+
+        summary_parts.append(f"Analysis performed on {record_count} records for context: '{data_context}'.")
 
         if analysis_result.summary_statistics:
-            summary_parts.append(f"Analysis of {source_table} shows notable metrics.")
+            summary_parts.append("Key metrics were calculated.")
             for key, value in analysis_result.summary_statistics.items():
-                findings.append(f"Statistic: {key.replace('_', ' ').capitalize()} - {value}.")
+                # Prettify key for display
+                display_key = key.replace('_', ' ').capitalize()
+                findings.append(f"Statistic: {display_key} - {value}.")
+            if not analysis_result.summary_statistics.get("message"): # If there wasn't a "no data" message
+                 recommendations.append("Recommendation: Review the detailed statistics for specific insights.")
 
         if analysis_result.trends_identified:
-            summary_parts.append("Key trends were observed.")
+            summary_parts.append("Trends were noted.")
             findings.extend(analysis_result.trends_identified)
-            if any("positive" in trend.lower() for trend in analysis_result.trends_identified):
-                recommendations.append("Recommendation: Continue strategies that are driving positive trends.")
+            # Simple recommendation based on presence of trends
+            if any("positive" in trend.lower() for trend in analysis_result.trends_identified if isinstance(trend, str)):
+                recommendations.append("Recommendation: Leverage positive trends and investigate drivers.")
+            elif any("negative" in trend.lower() for trend in analysis_result.trends_identified if isinstance(trend, str)):
+                recommendations.append("Recommendation: Address negative trends by identifying root causes.")
 
         if analysis_result.anomalies_detected:
-            summary_parts.append("Certain anomalies require attention.")
+            summary_parts.append("Anomalies were highlighted.")
             findings.extend(analysis_result.anomalies_detected)
-            recommendations.append("Recommendation: Investigate detected anomalies to understand root causes.")
+            if analysis_result.anomalies_detected: # If there are any anomalies
+                recommendations.append("Recommendation: Investigate detected anomalies promptly to mitigate risks or understand outliers.")
 
-        if analysis_result.forecast:
-            summary_parts.append(f"A forecast is available: {analysis_result.forecast}")
-            findings.append(f"Forecast: {analysis_result.forecast}")
-            if "increase" in analysis_result.forecast.lower():
-                recommendations.append("Recommendation: Prepare for potential growth as indicated by the forecast.")
+        # Removed forecast section as it was removed from AnalysisResult
 
-        if not summary_parts:
-            executive_summary = f"A standard analysis was performed on {source_table}, but no specific highlights were generated by the mock agent."
+        if not summary_parts or len(summary_parts) == 1: # Only the initial count message
+            executive_summary = f"A basic analysis was performed on {record_count} records from '{data_context}'. While statistics were computed, no strong mock narrative was generated for this specific dataset."
         else:
             executive_summary = " ".join(summary_parts)
 
         if not findings:
-            findings.append("No specific findings generated by the mock insight agent.")
+            findings.append(f"No specific detailed findings were generated by the mock insight agent for '{data_context}'. Check statistics for raw numbers.")
         if not recommendations:
-            recommendations.append("Standard recommendation: Monitor performance and continue data collection.")
+            recommendations.append("Standard recommendation: Continue monitoring key metrics and data quality.")
 
         return GeneratedInsight(
             executive_summary=executive_summary,
             key_findings=findings,
             recommendations=recommendations,
-            data_source_table=source_table
+            data_context=data_context,
+            record_count_analyzed=record_count
         )
 
-    async def run(self, analysis_result: DataAnalysisResult) -> GeneratedInsight:
+    async def run(self, analysis_result: DataAnalysisResult) -> GeneratedInsight: # Keep PydanticAI's async structure
         """
-        Runs the insight generation agent.
+        Runs the insight generation agent with real analysis results.
         """
-        return self._mock_generate_insights(analysis_result)
+        return self._mock_generate_insights_from_real_analysis(analysis_result)
+
+# Update app/agents/__init__.py if GeneratedInsight changed significantly.
+# from .insight_generator_agent import InsightGeneratorAgent, GeneratedInsight
+# The structure of GeneratedInsight (e.g. data_source_table -> data_context) has changed.
+# So, if __all__ is used or other modules import GeneratedInsight directly, __init__.py might need an update.
