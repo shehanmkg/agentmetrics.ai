@@ -6,4 +6,5 @@ This package contains the PydanticAI agent implementations for:
 - Data Analysis Agent
 - Insight Generator Agent
 - Visualization Agent
-""" 
+"""
+from .query_interpreter import QueryInterpreterAgent

@@ -1,8 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 
-# We'll replace this with actual agent implementation later
 from app.api.deps import get_api_key
+from app.agents import QueryInterpreterAgent # Import the agent
+from app.agents.query_interpreter import MockToolOutput # Import the response model
 
 router = APIRouter()
 
@@ -10,10 +11,13 @@ class QueryRequest(BaseModel):
     """Model for KPI query requests."""
     query: str
 
+# Update QueryResponse to match the agent's output structure
 class QueryResponse(BaseModel):
     """Model for KPI query responses."""
-    results: dict
     query: str
+    # results: dict # Keep this commented out or remove if not used
+    agent_response: MockToolOutput # Add this field for the agent's structured output
+
 
 @router.post("/", response_model=QueryResponse)
 async def process_query(
@@ -23,13 +27,12 @@ async def process_query(
     """
     Process a natural language query about KPIs.
     
-    Currently returns a placeholder response until the agent pipeline is implemented.
+    This endpoint now uses the QueryInterpreterAgent to process the query.
     """
-    # This is a placeholder - will be replaced with actual agent processing
+    agent = QueryInterpreterAgent()
+    agent_output = await agent.run(user_query=query_request.query)
+
     return QueryResponse(
         query=query_request.query,
-        results={
-            "message": "Agent pipeline not yet implemented",
-            "query_received": query_request.query
-        }
-    ) 
+        agent_response=agent_output
+    )
